@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SlideToPDF</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 3V21M12 3L7 8M12 3L17 8" stroke="url(#logo-grad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <defs>
+              <linearGradient id="logo-grad" x1="7" y1="3" x2="17" y2="21" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#6366f1" />
+                <stop offset="1" stop-color="#a855f7" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <h1>SlideToPDF</h1>
+      </div>
+      <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle Theme">
+        <!-- Sun icon -->
+        <svg class="sun-icon" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m11.314 11.314l.707.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
+        </svg>
+        <!-- Moon icon -->
+        <svg class="moon-icon" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+        </svg>
+      </button>
+    </header>
+
+    <main class="app-main">
+      <!-- Drag and Drop Target -->
+      <div id="drop-zone" class="drop-zone">
+        <div class="drop-zone-content">
+          <div class="icon-wrapper">
+            <svg class="cloud-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 16V8M12 8L9 11M12 8L15 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <p class="drop-text-primary">Drag & Drop Folder or Files Here</p>
+          <p class="drop-text-secondary">Or use the browsing controls below</p>
+        </div>
+      </div>
+
+      <!-- Settings and Control Panel -->
+      <div class="control-panel">
+        <div class="selection-summary">
+          <div class="summary-item">
+            <span class="summary-label">Source files:</span>
+            <span id="selected-files-count" class="summary-value empty">No files loaded</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Save destination:</span>
+            <span id="output-directory-path" class="summary-value">Same as Input Folder</span>
+          </div>
+        </div>
+
+        <div class="button-row">
+          <button type="button" id="btn-browse-files" class="btn btn-secondary">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Browse Files
+          </button>
+          <button type="button" id="btn-output-dir" class="btn btn-secondary">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+            </svg>
+            Choose Output
+          </button>
+        </div>
+
+        <button type="button" id="btn-convert" class="btn btn-primary" disabled>
+          Convert to PDF
+        </button>
+      </div>
+      
+      <!-- Status Badge -->
+      <div class="status-container">
+        <span id="status-text" class="status idle">Status: Idle</span>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const dropZone = document.getElementById('drop-zone');
+    const statusText = document.getElementById('status-text');
+    const selectedFilesCount = document.getElementById('selected-files-count');
+    const outputDirectoryPath = document.getElementById('output-directory-path');
+    
+    const btnBrowseFiles = document.getElementById('btn-browse-files');
+    const btnOutputDir = document.getElementById('btn-output-dir');
+    const btnConvert = document.getElementById('btn-convert');
+
+    // Local state variables
+    let loadedFilesList = [];
+    let selectedOutputDir = null;
+
+    // Prevent default drag behaviors to support drops
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      document.body.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    // Dragover styles
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropZone.addEventListener(eventName, () => {
+        dropZone.classList.add('dragover');
+      }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, () => {
+        dropZone.classList.remove('dragover');
+      }, false);
+    });
+
+    // Handle dropped files/folders
+    dropZone.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      const files = Array.from(dt.files);
+
+      if (files.length > 0) {
+        loadedFilesList = files.map(file => window.api.getPathForFile(file)).filter(p => p !== null);
+        updateSelectionUI();
+      }
+    });
+
+    // Handle dialog triggers
+    btnBrowseFiles.addEventListener('click', () => {
+      window.api.selectFiles();
+    });
+
+    btnOutputDir.addEventListener('click', () => {
+      window.api.selectOutputDir();
+    });
+
+    // Handle dialog replies
+    window.api.onSelectedFiles((files) => {
+      if (files && files.length > 0) {
+        loadedFilesList = files;
+        updateSelectionUI();
+      }
+    });
+
+    window.api.onSelectedOutputDir((dir) => {
+      if (dir) {
+        selectedOutputDir = dir;
+        outputDirectoryPath.innerText = dir;
+        outputDirectoryPath.className = 'summary-value';
+      }
+    });
+
+    // Trigger conversion
+    btnConvert.addEventListener('click', () => {
+      if (loadedFilesList.length === 0) return;
+
+      statusText.innerText = "Status: Converting...";
+      statusText.className = "status converting";
+      btnConvert.disabled = true;
+
+      window.api.convertFiles(loadedFilesList, selectedOutputDir);
+    });
+
+    // Handle conversion feedback
+    window.api.onConversionResult((message) => {
+      statusText.innerText = `Status: ${message}`;
+      btnConvert.disabled = (loadedFilesList.length === 0);
+
+      if (message.includes('Success!')) {
+        statusText.className = "status success";
+        // Clear files queue after conversion success
+        loadedFilesList = [];
+        updateSelectionUI();
+      } else if (message.includes('Error:')) {
+        statusText.className = "status error";
+      } else {
+        statusText.className = "status info";
+      }
+    });
+
+    // Theme management
+    const themeToggle = document.getElementById('theme-toggle');
+    const currentTheme = localStorage.getItem('theme') || 'light';
+    
+    if (currentTheme === 'dark') {
+      document.body.classList.add('dark');
+    }
+
+    themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark');
+      const updatedTheme = document.body.classList.contains('dark') ? 'dark' : 'light';
+      localStorage.setItem('theme', updatedTheme);
+    });
+
+    // Utility to update selection elements
+    function updateSelectionUI() {
+      if (loadedFilesList.length === 0) {
+        selectedFilesCount.innerText = "No files loaded";
+        selectedFilesCount.className = "summary-value empty";
+        btnConvert.disabled = true;
+      } else if (loadedFilesList.length === 1) {
+        // If single path is folder, show folder designation
+        const pathStr = loadedFilesList[0];
+        const isFolder = !pathStr.toLowerCase().endsWith('.pptx');
+        selectedFilesCount.innerText = isFolder ? "1 Folder queued" : "1 File loaded";
+        selectedFilesCount.className = "summary-value";
+        btnConvert.disabled = false;
+      } else {
+        selectedFilesCount.innerText = `${loadedFilesList.length} Files loaded`;
+        selectedFilesCount.className = "summary-value";
+        btnConvert.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+# Dependency directories
+node_modules/
+
+# OS-generated files
+Thumbs.db
+EHthumbs.db
+Desktop.ini
+.DS_Store
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temp conversion scripts
+antigravity-convert-*.ps1

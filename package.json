@@ -1,0 +1,15 @@
+{
+  "name": "slidetopdf",
+  "version": "1.0.0",
+  "description": "Minimalist batch PPTX to PDF Converter using native systems",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^42.3.2"
+  }
+}
